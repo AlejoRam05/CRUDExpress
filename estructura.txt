@@ -1,0 +1,11 @@
+/CRUDExpress
+│
+├── /node_modules         # Módulos instalados por npm
+├── /src                  # Código fuente
+│   ├── /routes           # Rutas de la API
+│   ├── /controllers      # Lógica de manejo de las solicitudes
+│   ├── /models           # Modelos de base de datos
+│
+├── package.json          # Archivo de configuración de npm
+└── .gitignore            # Ignorar node_modules
+└── script.js 
