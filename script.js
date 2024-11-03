@@ -1,13 +1,13 @@
-console.log('hello world')
-
-const { response } = require("express")
-const http = require("http")
-
-const app = http.createServer((request, response) => {
-    response.writeHead(200, { 'Content-Type': 'text/plain' })
-    response.end('Hello World')
-  })
-
+const express = require("express");
+const app = express();
 const PORT = 5000
-app.listen(PORT)
-console.log(`Server running on port ${PORT}`)
+
+
+
+app.get('/', (req, res) => {
+    res.send('Hello World desde Express!');
+});
+
+app.listen(PORT, () => {
+    console.log(`Servidor en ejecución en el puerto ${PORT}`);
+});
