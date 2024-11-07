@@ -1,0 +1,46 @@
+<!-- views/index.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios</title>
+    <script>
+        async function votar(id) {
+            try {
+                const res = await fetch(`/users/${id}/vote`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById(`votos-${id}`).textContent = data.votos;
+                    // Opcionalmente puedes recargar la página aquí para reordenar el ranking
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error al votar:', error);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Ranking de Usuarios por Votos</h1>
+    <ul>
+        <% users.forEach((user, index) => { %> <!-- users ya está ordenado en el controlador -->
+            <li>
+                #<%= index + 1 %> <!-- Ranking basado en la posición en el array -->
+                <%= user.nombre %> - <%= user.email %> 
+                <button onclick="votar('<%= user._id %>')">Votar</button>
+                <span id="votos-<%= user._id %>"><%= user.votos %></span> votos
+            </li>
+        <% }) %>
+    </ul>
+
+    <h2>Crear Usuario</h2>
+    <form action="/users" method="POST">
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required><br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br>
+        <button type="submit">Crear Usuario</button>
+    </form>
+</body>
+</html>

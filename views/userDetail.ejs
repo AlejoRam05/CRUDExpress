@@ -1,0 +1,32 @@
+<!-- views/userDetail.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Usuario</title>
+</head>
+<body>
+    <h1>Detalle de Usuario: <%= user.nombre %></h1>
+    <p>Email: <%= user.email %></p>
+    <p>Fecha de Registro: <%= user.createdAt %></p>
+
+    <h2>Pizarras</h2>
+    <ul>
+        <% user.pizarra.forEach(pizarra => { %>
+            <li>
+                Clase: <%= pizarra.clase %> | Fecha de Publicación: <%= pizarra.publicado %> | Votos: <%= pizarra.votos %>
+            </li>
+        <% }) %>
+    </ul>
+
+    <h3>Agregar Pizarra</h3>
+    <form action="/users/<%= user._id %>/pizarras" method="POST">
+        <label for="clase">Clase:</label>
+        <input type="text" id="clase" name="clase" required><br>
+        <button type="submit">Agregar Pizarra</button>
+    </form>
+    
+    <a href="/users">Volver a la lista de usuarios</a>
+</body>
+</html>
