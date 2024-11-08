@@ -13,12 +13,12 @@ const getAllUsers = async (req, res) => {
 
 // Función para crear un nuevo usuario con pizarras
 const createUser = (req, res) => {
-    const { nombre, email, pizarras } = req.body; // Se espera que 'pizarras' venga como un arreglo en el cuerpo de la solicitud
+    const { nombre, email, pizarras } = req.body; 
 
     const user = new User({
         nombre,
         email,
-        pizarras, // Guardar las pizarras como subdocumentos dentro del usuario
+        pizarras,
     });
 
     user.save()
@@ -29,7 +29,7 @@ const createUser = (req, res) => {
 // Función para actualizar un usuario con pizarras
 const updateUser = (req, res) => {
     const userId = req.params.id;
-    const { nombre, email, pizarras } = req.body; // Recibir nuevos valores para el usuario y las pizarras
+    const { nombre, email, pizarras } = req.body; 
 
     User.findByIdAndUpdate(userId, { nombre, email, pizarras }, { new: true })
         .then(() => res.redirect('/')) // Redirigir al índice después de actualizar el usuario
@@ -88,7 +88,7 @@ const voteUser = async (req, res) => {
         const user = await User.findByIdAndUpdate(userId, { $inc: { votos: 1 } }, { new: true });
         if (!user) return res.status(404).send('Usuario no encontrado');
         
-        res.json({ success: true, votos: user.votos }); // Enviar los votos actualizados al cliente
+        res.json({ success: true, votos: user.votos }); 
     } catch (err) {
         console.log('Error al votar por el usuario', err);
         res.status(500).send('Error al votar por el usuario');

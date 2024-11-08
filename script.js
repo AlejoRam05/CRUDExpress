@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { User } = require('./models/models'); // Asegúrate de importar el modelo de usuario
-const userRoutes = require('./routes/uRoutes'); // Rutas de usuarios
+const { User } = require('./models/models'); 
+const userRoutes = require('./routes/uRoutes');
 const app = express();
 
 // Configuración de EJS como motor de plantillas
@@ -11,7 +11,6 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Ruta principal (index) para mostrar todos los usuarios
 app.get('/', async (req, res) => {
     try {
         const users = await User.find(); // Obtener todos los usuarios con sus pizarras
@@ -30,7 +29,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/crudexpress', {
 .then(() => console.log('Conectado a la base de datos'))
 .catch((err) => console.log('Error de conexión', err));
 
-// Rutas para usuarios y pizarras
+// Rutas para usuarios
 app.use('/users', userRoutes);
 
 // Iniciar servidor en el puerto 3000
