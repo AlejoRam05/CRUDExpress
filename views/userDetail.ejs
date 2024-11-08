@@ -4,29 +4,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle de Usuario</title>
+    <title>Detalles del Usuario</title>
 </head>
 <body>
-    <h1>Detalle de Usuario: <%= user.nombre %></h1>
-    <p>Email: <%= user.email %></p>
-    <p>Fecha de Registro: <%= user.createdAt %></p>
+    <h1>Pizarras de <%= user.nombre %></h1>
 
-    <h2>Pizarras</h2>
     <ul>
-        <% user.pizarra.forEach(pizarra => { %>
+        <% user.pizarras.forEach(pizarra => { %>
             <li>
-                Clase: <%= pizarra.clase %> | Fecha de Publicación: <%= pizarra.publicado %> | Votos: <%= pizarra.votos %>
+                Clase: <%= pizarra.clase %> - Creada el: <%= pizarra.createdAt.toLocaleDateString() %>
             </li>
         <% }) %>
     </ul>
 
-    <h3>Agregar Pizarra</h3>
+    <h2>Agregar Nueva Pizarra</h2>
     <form action="/users/<%= user._id %>/pizarras" method="POST">
         <label for="clase">Clase:</label>
-        <input type="text" id="clase" name="clase" required><br>
+        <input type="text" id="clase" name="clase" required>
         <button type="submit">Agregar Pizarra</button>
     </form>
-    
-    <a href="/users">Volver a la lista de usuarios</a>
+
+    <button onclick="window.location.href='/'">Volver a Usuarios</button>
 </body>
 </html>

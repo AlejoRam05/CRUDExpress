@@ -12,24 +12,48 @@
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById(`votos-${id}`).textContent = data.votos;
-                    // Opcionalmente puedes recargar la página aquí para reordenar el ranking
                     location.reload();
                 }
             } catch (error) {
                 console.error('Error al votar:', error);
             }
         }
+
+        async function eliminarUsuario(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+                try {
+                    const res = await fetch(`/users/${id}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (data.success) {
+                        location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error al eliminar usuario:', error);
+                }
+            }
+        }
+
+        function mostrarFormularioEdicion(id, nombre, email) {
+            document.getElementById('userId').value = id;
+            document.getElementById('nombreActualizar').value = nombre;
+            document.getElementById('emailActualizar').value = email;
+            document.getElementById('formulario-edicion').style.display = 'block';
+        }
     </script>
 </head>
 <body>
     <h1>Ranking de Usuarios por Votos</h1>
+    <button onclick="window.location.href='/pizarra'">Ir a la Pizarra</button> <!-- Botón de redirección a la pizarra -->
+
     <ul>
-        <% users.forEach((user, index) => { %> <!-- users ya está ordenado en el controlador -->
+        <% users.forEach((user, index) => { %>
             <li>
-                #<%= index + 1 %> <!-- Ranking basado en la posición en el array -->
-                <%= user.nombre %> - <%= user.email %> 
+                #<%= index + 1 %> 
+                <%= user.nombre %> - <%= user.email %>
                 <button onclick="votar('<%= user._id %>')">Votar</button>
                 <span id="votos-<%= user._id %>"><%= user.votos %></span> votos
+                <button onclick="mostrarFormularioEdicion('<%= user._id %>', '<%= user.nombre %>', '<%= user.email %>')">Editar</button>
+                <button onclick="eliminarUsuario('<%= user._id %>')">Eliminar</button>
             </li>
         <% }) %>
     </ul>
@@ -42,5 +66,18 @@
         <input type="email" id="email" name="email" required><br>
         <button type="submit">Crear Usuario</button>
     </form>
+
+    <!-- Formulario de Edición de Usuario -->
+    <div id="formulario-edicion" style="display: none;">
+        <h2>Actualizar Usuario</h2>
+        <form action="/users/update" method="POST">
+            <input type="hidden" id="userId" name="id">
+            <label for="nombreActualizar">Nombre:</label>
+            <input type="text" id="nombreActualizar" name="nombre" required><br>
+            <label for="emailActualizar">Email:</label>
+            <input type="email" id="emailActualizar" name="email" required><br>
+            <button type="submit">Actualizar Usuario</button>
+        </form>
+    </div>
 </body>
 </html>

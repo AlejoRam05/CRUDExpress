@@ -22,6 +22,8 @@ router.put('/:id', updateUser); // Actualizar un usuario específico
 router.delete('/:id', deleteUser); // Eliminar un usuario específico
 router.post('/:id/vote', voteUser)
 router.post('/:id/pizarras', addPizarraToUser); // Agregar una pizarra a un usuario específico
-router.get('/:id/pizarras', getUserPizarras); // Obtener todas las pizarras de un usuario específico
+router.get('/pizarras/:id', getUserPizarras); // Obtener todas las pizarras de un usuario específico
+router.delete('/users/:id', deleteUser);
+router.post('/users/update', updateUser);
 
 module.exports = router;
