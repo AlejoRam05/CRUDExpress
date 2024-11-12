@@ -1,83 +1,135 @@
-<!-- views/index.ejs -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Usuarios</title>
+    <title>Ranking de Usuarios</title>
     <script>
+        // Función para votar
         async function votar(id) {
             try {
-                const res = await fetch(`/users/${id}/vote`, { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById(`votos-${id}`).textContent = data.votos;
+                const respuesta = await fetch(`/users/${id}/vote`, { method: 'POST' });
+                const datos = await respuesta.json();
+                
+                if (datos.success) {
+                    // Recarga de página
                     location.reload();
+                } else {
+                    alert('No se pudo registrar el voto');
                 }
             } catch (error) {
-                console.error('Error al votar:', error);
+                console.error('Error:', error);
+                alert('Hubo un problema al votar');
             }
         }
 
+        // Función para eliminar usuario
         async function eliminarUsuario(id) {
-            if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+            if (confirm('¿Estás seguro de eliminar este usuario?')) {
                 try {
-                    const res = await fetch(`/users/${id}`, { method: 'DELETE' });
-                    const data = await res.json();
-                    if (data.success) {
+                    const respuesta = await fetch(`/users/${id}`, { method: 'DELETE' });
+                    const datos = await respuesta.json();
+                    
+                    if (datos.success) {
                         location.reload();
+                    } else {
+                        alert('No se pudo eliminar el usuario');
                     }
                 } catch (error) {
-                    console.error('Error al eliminar usuario:', error);
+                    console.error('Error:', error);
+                    alert('Hubo un problema al eliminar');
                 }
             }
         }
 
-        function mostrarFormularioEdicion(id, nombre, email) {
-            document.getElementById('userId').value = id;
-            document.getElementById('nombreActualizar').value = nombre;
-            document.getElementById('emailActualizar').value = email;
-            document.getElementById('formulario-edicion').style.display = 'block';
+        async function cargarEdicion(id) {
+        try {
+            const respuesta = await fetch(`/users/${id}`);
+            const datos = await respuesta.json();
+            
+            if (datos.success) {
+                // Mostrar modal o formulario de edición
+                document.getElementById('editUserId').value = datos.user.id;
+                document.getElementById('editNombre').value = datos.user.nombre;
+                document.getElementById('editEmail').value = datos.user.email;
+                
+                // Mostrar modal de edición
+                document.getElementById('editModal').style.display = 'block';
+            } else {
+                alert('No se pudieron cargar los datos del usuario');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Hubo un problema al cargar los datos');
         }
+    }
+
+    // Función para guardar edición
+    async function guardarEdicion() {
+        const id = document.getElementById('editUserId').value;
+        const nombre = document.getElementById('editNombre').value;
+        const email = document.getElementById('editEmail').value;
+
+        try {
+            const respuesta = await fetch(`/users/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id, nombre, email })
+            });
+
+            const datos = await respuesta.json();
+            
+            if (datos.success) {
+                location.reload(); // Recargar página
+            } else {
+                alert('No se pudo guardar la edición');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Hubo un problema al guardar');
+        }
+    }
+
+    // Función para cerrar modal
+    function cerrarModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
     </script>
 </head>
 <body>
-    <h1>Ranking de Usuarios por Votos</h1>
-    <button onclick="window.location.href='/pizarra'">Ir a la Pizarra</button> <!-- Botón de redirección a la pizarra -->
+    <h1>Ranking de Usuarios</h1>
 
+    <!-- Listado de usuarios -->
     <ul>
         <% users.forEach((user, index) => { %>
             <li>
                 #<%= index + 1 %> 
-                <%= user.nombre %> - <%= user.email %>
+                <%= user.nombre %> - <%= user.email %> 
+                (Votos: <%= user.votos %>)
                 <button onclick="votar('<%= user._id %>')">Votar</button>
-                <span id="votos-<%= user._id %>"><%= user.votos %></span> votos
-                <button onclick="mostrarFormularioEdicion('<%= user._id %>', '<%= user.nombre %>', '<%= user.email %>')">Editar</button>
                 <button onclick="eliminarUsuario('<%= user._id %>')">Eliminar</button>
+                <button onclick="cargarEdicion('<%= user._id %>')">Editar</button>
             </li>
         <% }) %>
     </ul>
+    <div id="editModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:20px; border:1px solid black;">
+        <h2>Editar Usuario</h2>
+        <input type="hidden" id="editUserId">
+        <label>Nombre:</label>
+        <input type="text" id="editNombre" required>
+        <label>Email:</label>
+        <input type="email" id="editEmail" required>
+        <button onclick="guardarEdicion()">Guardar</button>
+        <button onclick="cerrarModal()">Cancelar</button>
+    </div>
 
+    <!-- Formulario de creación de usuario -->
     <h2>Crear Usuario</h2>
     <form action="/users" method="POST">
-        <label for="nombre">Nombre:</label>
-        <input type="text" id="nombre" name="nombre" required><br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br>
+        <input type="text" name="nombre" placeholder="Nombre" required>
+        <input type="email" name="email" placeholder="Email" required>
         <button type="submit">Crear Usuario</button>
     </form>
-
-    <!-- Formulario de Edición de Usuario -->
-    <div id="formulario-edicion" style="display: none;">
-        <h2>Actualizar Usuario</h2>
-        <form action="/users/update" method="POST">
-            <input type="hidden" id="userId" name="id">
-            <label for="nombreActualizar">Nombre:</label>
-            <input type="text" id="nombreActualizar" name="nombre" required><br>
-            <label for="emailActualizar">Email:</label>
-            <input type="email" id="emailActualizar" name="email" required><br>
-            <button type="submit">Actualizar Usuario</button>
-        </form>
-    </div>
 </body>
 </html>

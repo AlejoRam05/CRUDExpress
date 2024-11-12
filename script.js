@@ -1,38 +1,35 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { User } = require('./models/models'); 
+const bodyParser = require('body-parser');
 const userRoutes = require('./routes/uRoutes');
+
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Configuración de EJS como motor de plantillas
-app.set('view engine', 'ejs'); 
-
-// Middleware para procesar datos del formulario
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
-app.get('/', async (req, res) => {
-    try {
-        const users = await User.find(); // Obtener todos los usuarios con sus pizarras
-        res.render('index', { users }); // Pasar los usuarios a la vista
-    } catch (err) {
-        console.log('Error al obtener usuarios', err);
-        res.status(500).send('Error en el servidor');
-    }
+// Conexión a MongoDB
+mongoose.connect('mongodb://localhost:27017/userdb', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
 });
 
-// Conexión con MongoDB
-mongoose.connect('mongodb://127.0.0.1:27017/crudexpress', { 
-    useNewUrlParser: true, 
-    useUnifiedTopology: true 
-})
-.then(() => console.log('Conectado a la base de datos'))
-.catch((err) => console.log('Error de conexión', err));
+// Configuraciones de middleware
+app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-// Rutas para usuarios
-app.use('/users', userRoutes);
+// Rutas
+app.use('/', userRoutes);
 
-// Iniciar servidor en el puerto 3000
-app.listen(3000, () => {
-    console.log('Servidor corriendo en http://localhost:3000');
+// Middleware de manejo de errores
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).render('error', { 
+        message: 'Algo salió mal', 
+        details: err.message 
+    });
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en puerto ${PORT}`);
 });

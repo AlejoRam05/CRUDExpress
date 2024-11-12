@@ -1,106 +1,174 @@
 const { User } = require('../models/models');
 
-// Función para obtener todos los usuarios con sus pizarras
-const getAllUsers = async (req, res) => {
-    try {
-        const users = await User.find().sort({ votos: -1 }); // Ordenar usuarios por votos en orden descendente
-        res.render('index', { users });
-    } catch (err) {
-        console.log('Error al obtener usuarios', err);
-        res.status(500).send('Error en el servidor');
+
+
+class UserController {
+    // Obtener todos los usuarios
+    static async getUsers(req, res) {
+        try {
+            const users = await User.find().sort({ votos: -1 });
+            res.render('index', { users });
+        } catch (error) {
+            res.status(500).json({ 
+                error: 'Error al obtener usuarios', 
+                details: error.message 
+            });
+        }
     }
-};
 
-// Función para crear un nuevo usuario con pizarras
-const createUser = (req, res) => {
-    const { nombre, email, pizarras } = req.body; 
+    static async createUser(req, res) {
+        try {
+            const { nombre, email } = req.body;
+            
+            // Validaciones adicionales
+            if (!nombre || !email) {
+                return res.status(400).render('error', { 
+                    message: 'Nombre y email son requeridos' 
+                });
+            }
+    
+            // Verificar si el email ya existe
+            const emailExistente = await User.findOne({ email });
+            if (emailExistente) {
+                return res.status(400).render('error', { 
+                    message: 'El email ya está registrado' 
+                });
+            }
+    
+            const nuevoUsuario = new User({ nombre, email });
+            await nuevoUsuario.save();
+            res.redirect('/');
+        } catch (error) {
+            // Manejar errores de validación de Mongoose
+            if (error.name === 'ValidationError') {
+                const errores = Object.values(error.errors).map(err => err.message);
+                return res.status(400).render('error', { 
+                    message: errores.join(', ') 
+                });
+            }
+            
+            res.status(500).render('error', { 
+                message: 'Error al crear usuario',
+                details: error.message 
+            });
+        }
+    }
 
-    const user = new User({
-        nombre,
-        email,
-        pizarras,
-    });
+    // Votar por usuario
+    static async voteUser(req, res) {
+        try {
+            const userId = req.params.id;
+            const user = await User.findByIdAndUpdate(
+                userId, 
+                { $inc: { votos: 1 } }, 
+                { new: true }
+            );
 
-    user.save()
-        .then(() => res.redirect('/')) // Redirigir al índice después de crear el usuario
-        .catch(err => res.status(400).send('Error al crear el usuario'));
-};
+            if (!user) {
+                return res.status(404).json({ error: 'Usuario no encontrado' });
+            }
 
-// Función para actualizar un usuario con pizarras
-const updateUser = (req, res) => {
-    const userId = req.params.id;
-    const { nombre, email, pizarras } = req.body; 
+            res.json({ 
+                success: true, 
+                votos: user.votos 
+            });
+        } catch (error) {
+            res.status(500).json({ 
+                error: 'Error al votar', 
+                details: error.message 
+            });
+        }
+    }
 
-    User.findByIdAndUpdate(userId, { nombre, email, pizarras }, { new: true })
-        .then(() => res.redirect('/')) // Redirigir al índice después de actualizar el usuario
-        .catch(err => res.status(400).send('Error al actualizar el usuario'));
-};
+    static async getUserById(req, res) {
+        try {
+            const userId = req.params.id;
+            const user = await User.findById(userId);
+    
+            if (!user) {
+                return res.status(404).json({ error: 'Usuario no encontrado' });
+            }
+    
+            res.json({
+                success: true,
+                user: {
+                    id: user._id,
+                    nombre: user.nombre,
+                    email: user.email
+                }
+            });
+        } catch (error) {
+            res.status(500).json({ 
+                error: 'Error al obtener usuario', 
+                details: error.message 
+            });
+        }
+    }
+    
 
-// Función para eliminar un usuario (y sus pizarras asociadas)
-const deleteUser = (req, res) => {
-    const userId = req.params.id;
-
-    User.findByIdAndDelete(userId)
-        .then(() => res.redirect('/')) // Redirigir al índice después de eliminar el usuario
-        .catch(err => res.status(400).send('Error al eliminar el usuario'));
-};
-
-// Función para agregar una nueva pizarra a un usuario
-const addPizarraToUser = async (req, res) => {
-    const userId = req.params.id;
-    const { clase } = req.body; // Recibir los datos de la pizarra (en este caso 'clase')
-
+    // Actualizar usuario
+    static async updateUser(req, res) {
     try {
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).send('Usuario no encontrado');
+        const { id, nombre, email } = req.body;
+        
+        // Validaciones básicas
+        if (!nombre || !email) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Nombre y email son requeridos' 
+            });
         }
 
-        // Agregar una nueva pizarra al arreglo de pizarras del usuario
-        user.pizarras.push({ clase });
-        await user.save();
+        const usuarioActualizado = await User.findByIdAndUpdate(
+            id, 
+            { nombre, email }, 
+            { new: true }
+        );
 
-        res.redirect(`/users/${userId}/pizarras`);
-    } catch (err) {
-        console.log('Error al agregar pizarra', err);
-        res.status(500).send('Error al agregar la pizarra');
+        if (!usuarioActualizado) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Usuario no encontrado' 
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            user: {
+                id: usuarioActualizado._id,
+                nombre: usuarioActualizado.nombre,
+                email: usuarioActualizado.email
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            error: 'Error al actualizar usuario', 
+            details: error.message 
+        });
     }
-};
+}
 
-// Función para obtener las pizarras de un usuario específico
-const getUserPizarras = async (req, res) => {
-    const userId = req.params.id; // Obtener el id del usuario
-
-    try {
-        const user = await User.findById(userId);
-        if (!user) return res.status(404).send('Usuario no encontrado');
-
-        res.render('userDetail', { user }); // Pasar el usuario con sus pizarras a la vista
-    } catch (err) {
-        console.log('Error al obtener pizarras', err);
-        res.status(500).send('Error al obtener las pizarras');
+    static async deleteUser(req, res) {
+        try {
+            const userId = req.params.id;
+            const usuarioEliminado = await User.findByIdAndDelete(userId);
+            
+            if (!usuarioEliminado) {
+                return res.status(404).json({ 
+                    success: false, 
+                    error: 'Usuario no encontrado' 
+                });
+            }
+            
+            res.json({ success: true });
+        } catch (error) {
+            res.status(500).json({ 
+                error: 'Error al eliminar usuario', 
+                details: error.message 
+            });
+        }
     }
-};
-const voteUser = async (req, res) => {
-    const userId = req.params.id;
+}
 
-    try {
-        const user = await User.findByIdAndUpdate(userId, { $inc: { votos: 1 } }, { new: true });
-        if (!user) return res.status(404).send('Usuario no encontrado');
-        
-        res.json({ success: true, votos: user.votos }); 
-    } catch (err) {
-        console.log('Error al votar por el usuario', err);
-        res.status(500).send('Error al votar por el usuario');
-    }
-};
-
-module.exports = { 
-    getAllUsers, 
-    createUser, 
-    updateUser, 
-    deleteUser, 
-    addPizarraToUser, 
-    getUserPizarras,
-    voteUser 
-};
+module.exports = UserController;
